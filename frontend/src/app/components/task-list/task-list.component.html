@@ -1,0 +1,260 @@
+<div class="task-list-container">
+  <!-- Header -->
+  <div class="list-header">
+    <h2>Task Management</h2>
+    <button class="btn btn-primary" (click)="create()" [disabled]="loading">
+      <span>+ Add New Task</span>
+    </button>
+  </div>
+
+  <!-- Alert Messages -->
+  <div *ngIf="error" class="alert alert-error">
+    <span class="alert-icon">⚠️</span>
+    <span class="alert-message">{{ error }}</span>
+    <button class="alert-close" (click)="error = null">×</button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span class="alert-icon">✓</span>
+    <span class="alert-message">{{ successMessage }}</span>
+    <button class="alert-close" (click)="successMessage = null">×</button>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <!-- Search Input -->
+      <div class="search-input-wrapper">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search tasks..."
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="searchTasks()"
+          (ngModelChange)="searchTasks()"
+          [disabled]="loading"
+        />
+        <button class="btn btn-search" (click)="searchTasks()" [disabled]="loading || !searchTerm">
+          🔍 Search
+        </button>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-control">
+        <label for="status-filter">Status:</label>
+        <select
+          id="status-filter"
+          [(ngModel)]="selectedStatus"
+          (ngModelChange)="filterByStatus($event)"
+          [disabled]="loading"
+        >
+          <option [ngValue]="null">All Tasks</option>
+          <option [ngValue]="false">Pending</option>
+          <option [ngValue]="true">Completed</option>
+        </select>
+      </div>
+
+      <!-- Priority Filter -->
+      <div class="filter-control">
+        <label for="priority-filter">Priority:</label>
+        <select
+          id="priority-filter"
+          [(ngModel)]="selectedPriority"
+          (ngModelChange)="filterByPriority($event)"
+          [disabled]="loading"
+        >
+          <option [ngValue]="null">All Priorities</option>
+          <option *ngFor="let p of priorityOptions" [ngValue]="p">
+            {{ p }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Assignee Filter -->
+      <div class="filter-control">
+        <input
+          type="text"
+          class="input-small"
+          placeholder="Filter by assignee..."
+          [(ngModel)]="selectedAssignee"
+          (ngModelChange)="filterByAssignee($event)"
+          [disabled]="loading"
+        />
+      </div>
+
+      <!-- Clear Filters Button -->
+      <button
+        class="btn btn-secondary"
+        (click)="clearFilters()"
+        [disabled]="!isFiltering()"
+      >
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading tasks...</p>
+    <!-- Loading Skeleton -->
+    <div class="skeleton-list">
+      <div *ngFor="let item of [1, 2, 3]" class="skeleton-row">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-button"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && tasks.length === 0" class="empty-state">
+    <div class="empty-state-icon">📋</div>
+    <h3>No Tasks Found</h3>
+    <p *ngIf="isFiltering()">
+      No tasks match your filters. Try adjusting your criteria.
+    </p>
+    <p *ngIf="!isFiltering()">
+      Get started by creating your first task!
+    </p>
+    <button class="btn btn-primary" (click)="create()">
+      Create First Task
+    </button>
+  </div>
+
+  <!-- Tasks Table -->
+  <div *ngIf="!loading && tasks.length > 0" class="tasks-table-container">
+    <table class="tasks-table">
+      <thead>
+        <tr>
+          <th class="col-status">Status</th>
+          <th class="col-title">Title</th>
+          <th class="col-priority">Priority</th>
+          <th class="col-assignee">Assigned To</th>
+          <th class="col-duedate">Due Date</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let task of tasks; trackBy: trackByTaskId"
+          [ngClass]="getTaskRowClass(task)"
+        >
+          <!-- Status Checkbox -->
+          <td class="col-status">
+            <input
+              type="checkbox"
+              [checked]="task.isCompleted"
+              (change)="toggleComplete(task)"
+              [disabled]="loading"
+              class="checkbox-input"
+            />
+          </td>
+
+          <!-- Title -->
+          <td class="col-title" [title]="task.title">
+            <span [class.completed]="task.isCompleted">{{ task.title }}</span>
+            <span *ngIf="isOverdue(task)" class="badge badge-overdue">Overdue</span>
+          </td>
+
+          <!-- Priority Badge -->
+          <td class="col-priority">
+            <span class="badge" [ngClass]="getPriorityClass(task.priority)">
+              {{ task.priority || 'MEDIUM' }}
+            </span>
+          </td>
+
+          <!-- Assigned To -->
+          <td class="col-assignee">
+            {{ task.assignedTo || '-' }}
+          </td>
+
+          <!-- Due Date -->
+          <td class="col-duedate">
+            <span *ngIf="task.dueDate">
+              {{ task.dueDate | date:'short' }}
+            </span>
+            <span *ngIf="!task.dueDate" class="text-muted">-</span>
+          </td>
+
+          <!-- Actions -->
+          <td class="col-actions">
+            <button
+              class="btn btn-sm btn-edit"
+              (click)="edit(task)"
+              [disabled]="loading"
+              title="Edit task"
+            >
+              ✎ Edit
+            </button>
+            <button
+              class="btn btn-sm btn-delete"
+              (click)="delete(task)"
+              [disabled]="loading"
+              title="Delete task"
+            >
+              🗑 Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div *ngIf="!loading && tasks.length > 0" class="pagination-container">
+    <div class="pagination-info">
+      <span>Page {{ currentPage + 1 }} of {{ totalPages || 1 }}</span>
+      <span class="total-items">({{ totalElements }} total tasks)</span>
+    </div>
+
+    <div class="pagination-controls">
+      <!-- Previous Button -->
+      <button
+        class="btn btn-sm"
+        (click)="previousPage()"
+        [disabled]="currentPage === 0 || loading"
+      >
+        ← Previous
+      </button>
+
+      <!-- Page Numbers -->
+      <div class="page-numbers">
+        <button
+          *ngFor="let page of getPaginationRange()"
+          class="btn btn-sm"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+          [disabled]="loading"
+        >
+          {{ page + 1 }}
+        </button>
+      </div>
+
+      <!-- Next Button -->
+      <button
+        class="btn btn-sm"
+        (click)="nextPage()"
+        [disabled]="currentPage >= totalPages - 1 || loading"
+      >
+        Next →
+      </button>
+
+      <!-- Page Size Selector -->
+      <div class="page-size-selector">
+        <label for="page-size">Items per page:</label>
+        <select
+          id="page-size"
+          [(ngModel)]="pageSize"
+          (ngModelChange)="changePageSize($event)"
+          [disabled]="loading"
+          class="select-small"
+        >
+          <option *ngFor="let size of pageSizeOptions" [value]="size">
+            {{ size }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>

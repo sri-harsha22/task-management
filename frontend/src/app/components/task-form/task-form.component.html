@@ -1,0 +1,35 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <label>Title
+    <input formControlName="title" />
+  </label>
+  <div *ngIf="form.controls.title.invalid && form.controls.title.touched">Title is required (max 100).</div>
+
+  <label>Description
+    <textarea formControlName="description"></textarea>
+  </label>
+
+  <label>Due date
+    <input type="datetime-local" formControlName="dueDate" />
+  </label>
+
+  <label>Assigned to
+    <input formControlName="assignedTo" />
+  </label>
+
+  <label>Priority
+    <select formControlName="priority">
+      <option>LOW</option>
+      <option>MEDIUM</option>
+      <option>HIGH</option>
+      <option>URGENT</option>
+    </select>
+  </label>
+
+  <label>Completed
+    <input type="checkbox" formControlName="isCompleted" />
+  </label>
+
+  <button type="submit" [disabled]="form.invalid">Save</button>
+</form>
