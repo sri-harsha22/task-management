@@ -44,14 +44,17 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   // UI State
   loading = false;
+  /** @used-in-template */
   searching = false;
   error: string | null = null;
   successMessage: string | null = null;
 
   // Pagination options
+  /** @used-in-template */
   pageSizeOptions = CONFIG.PAGE_SIZE_OPTIONS;
 
   // Priority options for dropdown
+  /** @used-in-template */
   priorityOptions: TaskPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
   // Memory management
@@ -59,10 +62,12 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   constructor(private taskService: TaskService, private router: Router) {}
 
+  /** @used-in-template */
   ngOnInit(): void {
     this.loadTasks();
   }
 
+  /** @lifecycle-hook */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

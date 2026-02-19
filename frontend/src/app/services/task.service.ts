@@ -46,6 +46,9 @@ export class TaskService {
 
   /**
    * Get paginated list of tasks with optional filtering
+   *
+   * This method intelligently routes to the appropriate backend endpoint
+   * based on the filter criteria provided.
    */
   getTasks(
     page: number = 0,
@@ -53,34 +56,130 @@ export class TaskService {
     filters?: TaskFilterCriteria,
     sort: string = 'id,asc'
   ): Observable<PagedResponse<Task>> {
-    let params = new HttpParams()
+    // If filters are provided, route to appropriate filter endpoint
+    if (filters) {
+      // Search takes priority
+      if (filters.searchTerm) {
+        return this.searchTasks(filters.searchTerm, page, size);
+      }
+
+      // Status filter
+      if (filters.status !== null && filters.status !== undefined) {
+        return this.filterByCompletionStatus(filters.status, page, size);
+      }
+
+      // Priority filter
+      if (filters.priority) {
+        return this.filterByPriority(filters.priority, page, size);
+      }
+
+      // Assignee filter
+      if (filters.assignedTo) {
+        return this.filterByAssignee(filters.assignedTo, page, size);
+      }
+
+      // Date range filter
+      if (filters.dueDateStart && filters.dueDateEnd) {
+        return this.filterByDateRange(filters.dueDateStart, filters.dueDateEnd, page, size);
+      }
+    }
+
+    // No filters - use base endpoint
+    const params = new HttpParams()
       .set('page', String(page))
       .set('size', String(size))
       .set('sort', sort);
 
-    // Add filter parameters
-    if (filters) {
-      if (filters.status !== null && filters.status !== undefined) {
-        params = params.set('isCompleted', String(filters.status));
-      }
-      if (filters.priority) {
-        params = params.set('priority', filters.priority);
-      }
-      if (filters.assignedTo) {
-        params = params.set('assignedTo', filters.assignedTo);
-      }
-      if (filters.searchTerm) {
-        params = params.set('searchTerm', filters.searchTerm);
-      }
-      if (filters.dueDateStart) {
-        params = params.set('dueDateStart', filters.dueDateStart);
-      }
-      if (filters.dueDateEnd) {
-        params = params.set('dueDateEnd', filters.dueDateEnd);
-      }
-    }
-
     return this.http.get<PagedResponse<Task>>(this.baseUrl, { params });
+  }
+
+  /**
+   * Filter tasks by completion status
+   */
+  filterByCompletionStatus(
+    isCompleted: boolean,
+    page: number = 0,
+    size: number = 10
+  ): Observable<PagedResponse<Task>> {
+    const params = new HttpParams()
+      .set('isCompleted', String(isCompleted))
+      .set('page', String(page))
+      .set('size', String(size));
+
+    return this.http.get<PagedResponse<Task>>(`${this.baseUrl}/filter/completed`, { params });
+  }
+
+  /**
+   * Filter tasks by priority
+   */
+  filterByPriority(
+    priority: TaskPriority,
+    page: number = 0,
+    size: number = 10
+  ): Observable<PagedResponse<Task>> {
+    const params = new HttpParams()
+      .set('priority', priority)
+      .set('page', String(page))
+      .set('size', String(size));
+
+    return this.http.get<PagedResponse<Task>>(`${this.baseUrl}/filter/priority`, { params });
+  }
+
+  /**
+   * Filter tasks by assignee
+   */
+  filterByAssignee(
+    assignedTo: string,
+    page: number = 0,
+    size: number = 10
+  ): Observable<PagedResponse<Task>> {
+    const params = new HttpParams()
+      .set('assignedTo', assignedTo)
+      .set('page', String(page))
+      .set('size', String(size));
+
+    return this.http.get<PagedResponse<Task>>(`${this.baseUrl}/filter/assigned-to`, { params });
+  }
+
+  /**
+   * Filter tasks by date range
+   */
+  filterByDateRange(
+    startDate: string,
+    endDate: string,
+    page: number = 0,
+    size: number = 10
+  ): Observable<PagedResponse<Task>> {
+    const params = new HttpParams()
+      .set('startDate', startDate)
+      .set('endDate', endDate)
+      .set('page', String(page))
+      .set('size', String(size));
+
+    return this.http.get<PagedResponse<Task>>(`${this.baseUrl}/filter/due-date-range`, { params });
+  }
+
+  /**
+   * Get overdue tasks
+   */
+  getOverdueTasks(page: number = 0, size: number = 10): Observable<PagedResponse<Task>> {
+    const params = new HttpParams()
+      .set('page', String(page))
+      .set('size', String(size));
+
+    return this.http.get<PagedResponse<Task>>(`${this.baseUrl}/filter/overdue`, { params });
+  }
+
+  /**
+   * Search tasks by term
+   */
+  searchTasks(searchTerm: string, page: number = 0, size: number = 10): Observable<PagedResponse<Task>> {
+    const params = new HttpParams()
+      .set('searchTerm', searchTerm)
+      .set('page', String(page))
+      .set('size', String(size));
+
+    return this.http.get<PagedResponse<Task>>(`${this.baseUrl}/search`, { params });
   }
 
   /**
@@ -126,16 +225,9 @@ export class TaskService {
   }
 
   /**
-   * Search tasks by term
+   * Get task statistics
    */
-  searchTasks(searchTerm: string, page: number = 0, size: number = 10): Observable<PagedResponse<Task>> {
-    return this.getTasks(page, size, { searchTerm });
-  }
-
-  /**
-   * Get overdue tasks
-   */
-  getOverdueTasks(page: number = 0, size: number = 10): Observable<PagedResponse<Task>> {
-    return this.getTasks(page, size, { status: false });
+  getStatistics(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/statistics`);
   }
 }
