@@ -1,35 +1,105 @@
-<form [formGroup]="form" (ngSubmit)="submit()">
-  <div *ngIf="error" class="error">{{ error }}</div>
+<div class="task-form-container">
 
-  <label>Title
-    <input formControlName="title" />
-  </label>
-  <div *ngIf="form.controls.title.invalid && form.controls.title.touched">Title is required (max 100).</div>
+    <div class="form-header">
+        <h2>Create Task</h2>
+    </div>
 
-  <label>Description
-    <textarea formControlName="description"></textarea>
-  </label>
+    <div *ngIf="error" class="alert alert-error">
+        <span>{{ error }}</span>
+        <button (click)="error = undefined">×</button>
+    </div>
 
-  <label>Due date
-    <input type="datetime-local" formControlName="dueDate" />
-  </label>
+    <form class="task-form" [formGroup]="form" (ngSubmit)="submit()">
 
-  <label>Assigned to
-    <input formControlName="assignedTo" />
-  </label>
+        <!-- Title -->
+        <div class="form-group">
+            <label class="form-label required" for="title">Title</label>
+            <input
+                    id="title"
+                    type="text"
+                    class="form-control"
+                    [class.is-invalid]="form.get('title')?.invalid && form.get('title')?.touched"
+                    formControlName="title"
+            />
 
-  <label>Priority
-    <select formControlName="priority">
-      <option>LOW</option>
-      <option>MEDIUM</option>
-      <option>HIGH</option>
-      <option>URGENT</option>
-    </select>
-  </label>
+            <div
+                    class="error-message"
+                    *ngIf="form.get('title')?.invalid && form.get('title')?.touched"
+            >
+        <span *ngIf="form.get('title')?.errors?.['required']">
+          Title is required.
+        </span>
+                <span *ngIf="form.get('title')?.errors?.['maxlength']">
+          Maximum 100 characters allowed.
+        </span>
+            </div>
+        </div>
 
-  <label>Completed
-    <input type="checkbox" formControlName="isCompleted" />
-  </label>
+        <!-- Description -->
+        <div class="form-group">
+            <label class="form-label" for="description">Description</label>
+            <textarea
+                    id="description"
+                    class="form-control"
+                    formControlName="description"
+            ></textarea>
+        </div>
 
-  <button type="submit" [disabled]="form.invalid">Save</button>
-</form>
+        <!-- Due Date -->
+        <div class="form-group">
+            <label class="form-label" for="dueDate">Due Date</label>
+            <input
+                    id="dueDate"
+                    type="datetime-local"
+                    class="form-control"
+                    formControlName="dueDate"
+            />
+        </div>
+
+        <!-- Assigned To -->
+        <div class="form-group">
+            <label class="form-label" for="assignedTo">Assigned To</label>
+            <input
+                    id="assignedTo"
+                    type="text"
+                    class="form-control"
+                    formControlName="assignedTo"
+            />
+        </div>
+
+        <!-- Priority -->
+        <div class="form-group">
+            <label class="form-label" for="priority">Priority</label>
+            <select
+                    id="priority"
+                    class="form-control"
+                    formControlName="priority"
+            >
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="URGENT">URGENT</option>
+            </select>
+        </div>
+
+        <!-- Completed -->
+        <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+                <input
+                        type="checkbox"
+                        class="form-checkbox"
+                        formControlName="isCompleted"
+                />
+                <span>Completed</span>
+            </label>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+                Save
+            </button>
+        </div>
+
+    </form>
+</div>

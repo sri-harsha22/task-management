@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Task, TaskPriority } from '../../models/task.model';
 import { TaskService, PagedResponse, TaskFilterCriteria } from '../../services/task.service';
 import { Router } from '@angular/router';
@@ -60,7 +60,11 @@ export class TaskListComponent implements OnInit, OnDestroy {
   // Memory management
   private destroy$ = new Subject<void>();
 
-  constructor(private taskService: TaskService, private router: Router) {}
+  constructor(
+      private taskService: TaskService,
+      private router: Router,
+      private cdr: ChangeDetectorRef
+  ) {}
 
   /** @used-in-template */
   ngOnInit(): void {
@@ -85,24 +89,26 @@ export class TaskListComponent implements OnInit, OnDestroy {
     this.taskService
       .getTasks(this.currentPage, this.pageSize, criteria)
       .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: PagedResponse<Task>) => {
-          this.tasks = response.content || [];
-          this.filteredTasks = this.tasks;
-          this.totalElements = response.totalElements || 0;
-          this.totalPages = response.totalPages || 0;
-          this.loading = false;
+        .subscribe({
+          next: (response: PagedResponse<Task>) => {
+            this.tasks = response.content || [];
+            this.filteredTasks = this.tasks;
+            this.totalElements = response.totalElements || 0;
+            this.totalPages = response.totalPages || 0;
+            this.loading = false;
 
-          if (this.tasks.length === 0 && !this.isFiltering()) {
-            this.successMessage = CONFIG.MESSAGES.NO_TASKS;
+            if (this.tasks.length === 0 && !this.isFiltering()) {
+              this.successMessage = CONFIG.MESSAGES.NO_TASKS;
+            }
+            this.cdr.markForCheck();
+          },
+          error: (error) => {
+            console.error('Error loading tasks:', error);
+            this.error = CONFIG.MESSAGES.LOAD_ERROR;
+            this.loading = false;
+            this.cdr.markForCheck();
           }
-        },
-        error: (error) => {
-          console.error('Error loading tasks:', error);
-          this.error = CONFIG.MESSAGES.LOAD_ERROR;
-          this.loading = false;
-        }
-      });
+        });
   }
 
   /**
@@ -120,7 +126,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   /**
    * Check if any filters are active
    */
-  private isFiltering(): boolean {
+   isFiltering(): boolean {
     return (
       this.selectedStatus !== null ||
       this.selectedPriority !== null ||

@@ -17,7 +17,8 @@ import { CONFIG } from '../../config/app.config';
  */
 @Component({
   selector: 'app-task-detail',
-  templateUrl: './task-detail.component.html'
+  templateUrl: './task-detail.component.html',
+  styleUrls: ['./task-detail.component.scss']
 })
 export class TaskDetailComponent implements OnInit, OnDestroy {
   task?: Task;
