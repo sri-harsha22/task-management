@@ -31,10 +31,9 @@
           placeholder="Search tasks..."
           [(ngModel)]="searchTerm"
           (keyup.enter)="searchTasks()"
-          (ngModelChange)="searchTasks()"
           [disabled]="loading"
         />
-        <button class="btn btn-search" (click)="searchTasks()" [disabled]="loading || !searchTerm">
+        <button class="btn btn-search" (click)="searchTasks()" [disabled]="loading">
           🔍 Search
         </button>
       </div>
@@ -77,9 +76,17 @@
           class="input-small"
           placeholder="Filter by assignee..."
           [(ngModel)]="selectedAssignee"
-          (ngModelChange)="filterByAssignee($event)"
+          (keyup.enter)="filterByAssignee(selectedAssignee)"
           [disabled]="loading"
         />
+        <button
+          class="btn btn-sm btn-search"
+          (click)="filterByAssignee(selectedAssignee)"
+          [disabled]="loading"
+          title="Apply assignee filter"
+        >
+          Apply
+        </button>
       </div>
 
       <!-- Clear Filters Button -->
@@ -99,7 +106,7 @@
     <p>Loading tasks...</p>
     <!-- Loading Skeleton -->
     <div class="skeleton-list">
-      <div *ngFor="let item of [1, 2, 3]" class="skeleton-row">
+      <div *ngFor="let _ of [1, 2, 3]" class="skeleton-row">
         <div class="skeleton skeleton-title"></div>
         <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-button"></div>

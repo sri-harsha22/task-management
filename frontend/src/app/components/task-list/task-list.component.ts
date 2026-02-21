@@ -44,8 +44,6 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   // UI State
   loading = false;
-  /** @used-in-template */
-  searching = false;
   error: string | null = null;
   successMessage: string | null = null;
 
@@ -199,7 +197,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
         .updateTask(task.id, { isCompleted: updatedStatus })
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          next: (updatedTask: Task) => {
+          next: () => {
             this.successMessage = CONFIG.MESSAGES.STATUS_UPDATED;
             this.loadTasks();
             this.clearMessage();
