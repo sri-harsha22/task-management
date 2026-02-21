@@ -192,20 +192,25 @@ export class TaskListComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Toggle the completion status
+    const updatedStatus = !task.isCompleted;
+
     this.taskService
-      .markCompleted(task.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (updatedTask: Task) => {
-          this.successMessage = CONFIG.MESSAGES.STATUS_UPDATED;
-          this.loadTasks();
-          this.clearMessage();
-        },
-        error: (error) => {
-          console.error('Error updating task status:', error);
-          this.error = CONFIG.MESSAGES.STATUS_UPDATE_ERROR;
-        }
-      });
+        .updateTask(task.id, { isCompleted: updatedStatus })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (updatedTask: Task) => {
+            this.successMessage = CONFIG.MESSAGES.STATUS_UPDATED;
+            this.loadTasks();
+            this.clearMessage();
+            this.cdr.markForCheck();
+          },
+          error: (error) => {
+            console.error('Error updating task status:', error);
+            this.error = CONFIG.MESSAGES.STATUS_UPDATE_ERROR;
+            this.cdr.markForCheck();
+          }
+        });
   }
 
   /**
